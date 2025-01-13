@@ -4,3 +4,9 @@
 .env.development
 .env.production
 .env.test
+
+# Node modules
+node_modules
+
+# Build directory
+build

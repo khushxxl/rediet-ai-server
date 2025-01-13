@@ -1,10 +1,11 @@
-require("dotenv").config();
+const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
 const OpenAI = require("openai");
 
 const app = express();
 const port = 8000;
+dotenv.config();
 
 // Middleware
 app.use(
