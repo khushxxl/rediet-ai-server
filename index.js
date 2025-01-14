@@ -4,7 +4,7 @@ const cors = require("cors");
 const OpenAI = require("openai");
 
 const app = express();
-const port = 8000;
+const port = process.env.PORT || 8000; // Allow Heroku to set port
 dotenv.config();
 
 // Middleware
@@ -21,6 +21,11 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" })); // Also increase
 // Initialize OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // Make sure to set this environment variable
+});
+
+// Health check endpoint for Heroku
+app.get("/", (req, res) => {
+  res.send("Server is running");
 });
 
 // Chat endpoint
@@ -57,67 +62,72 @@ app.post("/api/generate-health-report", async (req, res) => {
   console.log("Request received");
   const { message, profile } = req.body;
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "user",
-        content: `You are a professional nutritionist and trainer, you are going to generate a health report for me,
-        i shall give you my diet and exercise details along with my profile information. You are going to analyze my diet, exercise and profile to give me a personalized health report.
-        Be as accurate as possible. If exercise details are included then include exercise analysis in your report.
-        If diet details are included then include diet analysis in your report.
-
-        Please make sure data is as accurate as possible this a paying customer,
-
-        DONT INCLUDE ANYTHING ELSE FROM THE USER EXCEPT THE DIET, EXERCISE & MEDICAL HISTORY DETAILS
-
-        Now give me the health report in json format, start with { and end with } also dont include any backticks in your response.
-        Example of a health report:
-        Calculate and analyze BMI based on height and weight from profile - ${profile}
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
         {
-          "profile_analysis": {
-            "bmi": "35.2",
-            "status": "underweight",
-            "recommended_calories": "2000",
-            "recommended_macros": {
-              "protein": "100",
-              "carbs": "100", 
-              "fats": "100"
-            }
-          },
-          "summary": {
-            "health_score": "Summarize opinion about user's message and profile - ${message}, ${profile} and give score out of 10",
-            "strength": "Summary of user's strengths from message and profile",
-            "areas_of_improvement": "Key areas that need focus based on goals and current habits"
-          },
-          "detailed_analysis": {
-            "parameters": {
-              "diet_score": "Analyze diet vs recommended calories/macros, give score out of 10",
-              "exercise_score": "Analyze exercise routine for goal alignment, give score out of 10", 
-              "sleep_score": "Analyze sleep patterns, give score out of 10",
-              "overall_lifestyle_score": "Overall score considering profile goals and habits"
-            },
-            "insights": {
-              "diet_insights": "Detailed insights about diet patterns, nutritional balance vs recommended",
-              "exercise_insights": "Exercise analysis considering fitness goals and current level",
-              "sleep_insights": "Sleep pattern analysis and impact on goals",
-              "recommendations": "Specific recommendations based on profile and analysis"
-            },
-            "personalized_recommendations": {
-              "diet_changes": "Dietary changes aligned with calorie/macro targets",
-              "exercise_modifications": "Exercise adjustments for optimal goal achievement",
-              "stress_management": "Stress management techniques considering lifestyle",
-              "sleep_improvement": "Sleep optimization recommendations"
-            }
-          }
-        }`,
-      },
-    ],
-  });
+          role: "user",
+          content: `You are a professional nutritionist and trainer, you are going to generate a health report for me,
+          i shall give you my diet and exercise details along with my profile information. You are going to analyze my diet, exercise and profile to give me a personalized health report.
+          Be as accurate as possible. If exercise details are included then include exercise analysis in your report.
+          If diet details are included then include diet analysis in your report.
 
-  res.json({
-    response: JSON.parse(response.choices[0].message.content),
-  });
+          Please make sure data is as accurate as possible this a paying customer,
+
+          DONT INCLUDE ANYTHING ELSE FROM THE USER EXCEPT THE DIET, EXERCISE & MEDICAL HISTORY DETAILS
+
+          Now give me the health report in json format, start with { and end with } also dont include any backticks in your response.
+          Example of a health report:
+          Calculate and analyze BMI based on height and weight from profile - ${profile}
+          {
+            "profile_analysis": {
+              "bmi": "35.2",
+              "status": "underweight",
+              "recommended_calories": "2000",
+              "recommended_macros": {
+                "protein": "100",
+                "carbs": "100", 
+                "fats": "100"
+              }
+            },
+            "summary": {
+              "health_score": "Summarize opinion about user's message and profile - ${message}, ${profile} and give score out of 10",
+              "strength": "Summary of user's strengths from message and profile",
+              "areas_of_improvement": "Key areas that need focus based on goals and current habits"
+            },
+            "detailed_analysis": {
+              "parameters": {
+                "diet_score": "Analyze diet vs recommended calories/macros, give score out of 10",
+                "exercise_score": "Analyze exercise routine for goal alignment, give score out of 10", 
+                "sleep_score": "Analyze sleep patterns, give score out of 10",
+                "overall_lifestyle_score": "Overall score considering profile goals and habits"
+              },
+              "insights": {
+                "diet_insights": "Detailed insights about diet patterns, nutritional balance vs recommended",
+                "exercise_insights": "Exercise analysis considering fitness goals and current level",
+                "sleep_insights": "Sleep pattern analysis and impact on goals",
+                "recommendations": "Specific recommendations based on profile and analysis"
+              },
+              "personalized_recommendations": {
+                "diet_changes": "Dietary changes aligned with calorie/macro targets",
+                "exercise_modifications": "Exercise adjustments for optimal goal achievement",
+                "stress_management": "Stress management techniques considering lifestyle",
+                "sleep_improvement": "Sleep optimization recommendations"
+              }
+            }
+          }`,
+        },
+      ],
+    });
+
+    res.json({
+      response: JSON.parse(response.choices[0].message.content),
+    });
+  } catch (error) {
+    console.error("Error generating health report:", error);
+    res.status(500).json({ error: "Failed to generate health report" });
+  }
 });
 
 app.post("/api/food-info", async (req, res) => {
@@ -130,13 +140,6 @@ app.post("/api/food-info", async (req, res) => {
   }
 
   try {
-    // Validate base64 string format
-    // if (!base64Image.startsWith("data:image")) {
-    //   throw new Error(
-    //     "Invalid image format. Must be base64 encoded with data URI scheme"
-    //   );
-    // }
-
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -193,7 +196,6 @@ app.post("/api/food-info", async (req, res) => {
     });
 
     console.log("Analysis complete");
-    console.log(response.choices[0].message.content);
 
     // Set appropriate headers
     res.setHeader("Content-Type", "application/json");
@@ -203,12 +205,14 @@ app.post("/api/food-info", async (req, res) => {
   } catch (error) {
     console.error("Error analyzing image:", error);
     res.status(500).json({
-      error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      error: "Failed to analyze image",
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 });
 
-app.listen(port, () => {
+// Start server
+app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on port ${port}`);
 });
