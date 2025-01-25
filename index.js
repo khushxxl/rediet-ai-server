@@ -31,20 +31,37 @@ app.get("/", (req, res) => {
 // Chat endpoint
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, messageHistory, user_profile } = req.body;
 
     console.log("message", message);
+    console.log("messageHistory", messageHistory);
+    console.log("user_profile", user_profile);
 
     const completion = await openai.chat.completions.create({
       messages: [
         {
           role: "user",
-          content: `you are a proffessional nutritionist and a trainer and you are going to help me with my diet, 
-          i shall ask you any question any time, you gotta resolve my query with ref to my time eg: if i am asking you if i can eat a cupcake in night, you should say 
-          thats not right and inform me with diet foods that have a low calorie and can rmeove my hunger - ${message}, if the message is not relevant to diet or health or exercise, you should say i am not sure about that, i am a nutritionist and trainer and i can help you with diet and health related queries`,
+          content: `You are an expert nutritionist and certified personal trainer. Provide evidence-based nutrition and fitness advice tailored to the user's needs and timing.
+
+If asked about food choices, consider:
+- Time of day and meal timing
+- Nutritional value and macronutrients
+- Portion control and calorie content
+- Healthier alternatives when needed
+
+Here is the user's profile: ${user_profile} - this is the profile of the user, if its empty then just ignore it else use it to give better response
+if user asks about their personal info refer this - ${user_profile}
+dont recommend them any apps/tools/products/etc, just give them advice
+Don't claim to be a doctor or a medical professional, or are a nutritionist and trainer, you'r name is "Rediet AI", act as a nutritionist and trainer, but dont claim to be a nutritionist and trainer
+For example, if someone asks about late-night snacks, recommend low-calorie, nutrient-dense options that won't disrupt sleep.
+if they ask for recipes, sugges minimum 5 recipes
+Only provide advice related to nutrition, diet, exercise and general wellness. For other topics, clarify that you can only assist with health and fitness matters.
+Here is the user's question: ${message}   
+Here is the user's message history: ${messageHistory} - this is the history of the conversation between the user and the assistant, if its empty then just ignore it else use it to give better response
+`,
         },
       ],
-      model: "gpt-4o-mini",
+      model: "gpt-3.5-turbo-0125",
     });
 
     console.log("completion", completion);

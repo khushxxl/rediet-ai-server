@@ -1,16 +1,24 @@
 {
   "name": "redietapp-server",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "nodemon src/app.js",
+    "dev": "nodemon src/app.js",
+    "prod": "node src/app.js"
   },
-  "keywords": [],
+  "keywords": [
+    "nutrition",
+    "fitness",
+    "health",
+    "ai"
+  ],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "AI-powered nutrition and fitness advice application",
   "dependencies": {
+    "@deepgram/sdk": "^3.9.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
