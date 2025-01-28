@@ -256,8 +256,8 @@ here is an example response:
         {
           role: "user",
           content: `As a professional nutritionist, calculate the recommended daily macros based on these parameters:
-          ${userAnswers}
-
+          ${userAnswers} 
+          burn calories is the calories you burn in a day, calculate it based on the user's answers
 
         Provide the response in pure JSON format with the following structure:
         {
@@ -266,7 +266,8 @@ here is an example response:
             "protein": 0,
             "carbs": 0,
             "fats": 0,
-            "fiber": 0
+            "fiber": 0,
+            "burn_calories": 0
         },
         
         }`,
